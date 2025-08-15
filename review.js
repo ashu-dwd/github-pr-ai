@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
 import { get } from "http";
+import { generatePRbyGemini } from "./gemini.js";
 
 const getChangesFromLastCommit = async () => {
   const changes = execSync(`git diff-tree --no-commit-id --name-only -r HEAD`)
@@ -10,5 +11,28 @@ const getChangesFromLastCommit = async () => {
     .filter(Boolean);
 
   console.log(changes); // This will log the array of changed files
+  return changes;
 };
-getChangesFromLastCommit();
+//
+
+const readFileContent = (fileNameArray) => {
+  let object = {};
+  fileNameArray.forEach((fileName) => {
+    // const filePath = path.join(process.cwd(), fileName);
+    object[fileName] = fs.readFileSync(fileName, "utf8");
+  });
+  return object;
+};
+
+// console.log();
+const fileContent = readFileContent(await getChangesFromLastCommit());
+// console.log()
+const aiReview = await generatePRbyGemini(fileContent);
+console.log(aiReview);
+fs.writeFile(`review_${new Date()}.md`, aiReview, (err) => {
+  if (err) {
+    console.error(err);
+    return;
+  }
+});
+//

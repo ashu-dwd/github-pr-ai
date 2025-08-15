@@ -1,23 +1,31 @@
 import OpenAI from "openai";
-import dotenv from "dotenv";
-dotenv.config();
+import {
+  GEMINI_API_KEY,
+  GEMINI_MODEL_NAME,
+  GEMINI_SYSTEM_PROMPT,
+} from "./config.js";
 
 const openai = new OpenAI({
-  apiKey: process.env.GEMINI_API_KEY,
+  apiKey: GEMINI_API_KEY,
   baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
 });
 
-const generatePRbyGemini = async () => {
+export const generatePRbyGemini = async (filesObject) => {
   const response = await openai.chat.completions.create({
-    model: process.env.GEMINI_MODEL_NAME,
+    model: GEMINI_MODEL_NAME,
     messages: [
-      { role: "system", content: "You are a helpful assistant." },
+      {
+        role: "system",
+        content: GEMINI_SYSTEM_PROMPT,
+      },
       {
         role: "user",
-        content: "Explain to me how AI works",
+        content: JSON.stringify(filesObject),
       },
     ],
   });
+  const rawResponse = response.choices[0].message.content;
+  return rawResponse;
 
-  console.log(response.choices[0].message);
+  //console.log(response.choices[0].message.content);
 };
