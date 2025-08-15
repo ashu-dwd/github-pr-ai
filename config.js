@@ -16,7 +16,6 @@ Your task is to:
 6. If everything is fine, explicitly mention "PR is clean" with a brief explanation.
 
 Output format:
----
 **File:** <filename>
 - Issue 1: <description>
   Suggestion: <solution>
@@ -25,7 +24,6 @@ Output format:
 
 **Overall Review:**
 <your summary here>
----
 
 Only review the code provided in this PR. Do not assume or invent unrelated context.
 

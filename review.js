@@ -26,13 +26,26 @@ const readFileContent = (fileNameArray) => {
 
 // console.log();
 const fileContent = readFileContent(await getChangesFromLastCommit());
-// console.log()
-const aiReview = await generatePRbyGemini(fileContent);
-console.log(aiReview);
-fs.writeFile(`review_${new Date()}.md`, aiReview, (err) => {
+console.log(fileContent);
+fs.writeFile("test.json", JSON.stringify(fileContent), (err) => {
   if (err) {
     console.error(err);
     return;
   }
 });
+//'
+const aiReview = await generatePRbyGemini(fileContent);
+//console.log(aiReview);
+fs.writeFile(
+  `reviews/review_${new Date()
+    .toDateString()
+    .replace(/\s/g, "-")}${new Date().getTime()}.md`,
+  aiReview,
+  (err) => {
+    if (err) {
+      console.error(err);
+      return;
+    }
+  }
+);
 //
