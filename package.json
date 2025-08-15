@@ -1,6 +1,7 @@
 {
   "name": "github-pr",
   "private": true,
+  "type": "module",
   "devDependencies": {
     "@types/bun": "latest"
   },
