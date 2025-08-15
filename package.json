@@ -1,0 +1,14 @@
+{
+  "name": "github-pr",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "openai": "^5.12.2"
+  }
+}
