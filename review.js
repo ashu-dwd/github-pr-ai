@@ -1,6 +1,5 @@
 import { promises as fs } from "fs";
 import path from "path";
-import { execSync } from "child_process";
 import { generatePRbyGemini } from "./services/gemini.service.js";
 import { CONFIG } from "./config.js";
 import { ensureDirectoryExists } from "./utils/checkDir.js";
