@@ -47,11 +47,11 @@ const processCommitReview = async () => {
 
     const reviewPath = path.join(
       CONFIG.REVIEWS_DIR,
-      `review_${generateTimestamp()}.md`
+      `${review.prTitle.split(" ").join("_")}.md`
     );
     await ensureDirectoryExists(CONFIG.REVIEWS_DIR);
     try {
-      await fs.writeFile(reviewPath, review, CONFIG.ENCODING);
+      await fs.writeFile(reviewPath, review.prDetails, CONFIG.ENCODING);
       console.log(`✅ Review saved to: ${reviewPath}`);
     } catch (error) {
       console.error(
