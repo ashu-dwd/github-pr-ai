@@ -60,12 +60,12 @@ const processCommitReview = async () => {
       );
       return;
     }
-    console.log("📧 Sending email...");
+    ///console.log("📧 Sending email...");
     try {
-      await sendEmail(review);
-      console.log("✅ Email sent");
-      console.log("Sending on Discord..");
-      await sendToDiscord(review);
+      // await sendEmail(review);
+      //console.log("✅ Email sent");
+      //console.log("Sending on Discord..");
+      //await sendToDiscord(review);
       //console.log("✅ AI review sent to Discord!");
     } catch (error) {
       console.error("❌ Failed to send email:", error);
