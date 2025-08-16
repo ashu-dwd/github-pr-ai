@@ -7,6 +7,7 @@ import { generateTimestamp } from "./utils/generateTimestamp.js";
 import { getChangesFromLastCommit } from "./utils/detectChanges.js";
 import { readFileContents } from "./utils/readFileContents.js";
 import { sendEmail } from "./services/mail.service.js";
+import { sendToDiscord } from "./services/discord.service.js";
 
 /**
  * Main review process
