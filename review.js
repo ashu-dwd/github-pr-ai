@@ -1,7 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { generatePRbyGemini } from "./services/gemini.service.js";
-import { CONFIG, DISCORD_WEBHOOK } from "./config.js";
+import { CONFIG } from "./config.js";
 import { ensureDirectoryExists } from "./utils/checkDir.js";
 import { generateTimestamp } from "./utils/generateTimestamp.js";
 import { getChangesFromLastCommit } from "./utils/detectChanges.js";
@@ -65,10 +65,10 @@ const processCommitReview = async () => {
       await sendEmail(review);
       console.log("✅ Email sent");
       console.log("Sending on Discord..");
-      await sendToDiscord(review, DISCORD_WEBHOOK);
+      await sendToDiscord(review);
       console.log("✅ AI review sent to Discord!");
     } catch (error) {
-      console.error("❌ Failed to send email:", error.message);
+      console.error("❌ Failed to send email:", error);
       return;
     }
   } catch (error) {

@@ -1,9 +1,9 @@
 import fetch from "node-fetch"; // npm i node-fetch
 import { DISCORD_WEBHOOK } from "../config.js";
 
-export const sendToDiscord = async (message, webhookUrl) => {
+export const sendToDiscord = async (message) => {
   try {
-    const res = await fetch(webhookUrl, {
+    const res = await fetch(DISCORD_WEBHOOK, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content: message }),
