@@ -8,6 +8,16 @@ import { CONFIG } from "../config.js";
  */
 export const getChangesFromLastCommit = async () => {
   const getChanges = (command) => {
+    if (command === "compare current and last one commit changes") {
+      const fullDiff = execSync(
+        "git --no-pager diff HEAD^ HEAD --color --unified=9999",
+        { encoding: CONFIG.ENCODING }
+      );
+      const lines = fullDiff.split("\n");
+      console.log(lines);
+
+      return;
+    }
     try {
       return execSync(command, { encoding: CONFIG.ENCODING })
         .split("\n")
