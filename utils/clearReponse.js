@@ -11,5 +11,9 @@ export const clearResponseString = (text) => {
     .replace(/```text/g, "")
     .replace(/```diff/g, "")
     .replace(/```/g, "")
-    .replace(/\n/g, "");
+    .replace(/\n/g, "")
+    .replace(/```[a-z]*\n?/g, "") // remove code block markers
+    .replace(/\\/g, "\\\\") // escape backslashes
+    .replace(/"/g, '\\"') // escape double quotes
+    .replace(/\r?\n/g, "\\n");
 };
