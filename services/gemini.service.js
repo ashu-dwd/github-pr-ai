@@ -4,6 +4,7 @@ import {
   GEMINI_MODEL_NAME,
   GEMINI_SYSTEM_PROMPT,
 } from "../config.js";
+import { clearResponseString } from "../utils/clearReponse.js";
 
 const openai = new OpenAI({
   apiKey: GEMINI_API_KEY,
