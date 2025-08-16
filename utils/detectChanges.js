@@ -89,7 +89,7 @@ export const getChangesFromLastCommit = async () => {
     for (const method of changeMethods) {
       const changes = getChanges(method.command);
       console.log(`ℹ️ Using ${method.name}`);
-      console.log(`ℹ️ Found ${changes} changed files`);
+      console.log(`ℹ️ Found ${changes.length} changed files`);
 
       if (changes.length > 0) {
         console.log(
