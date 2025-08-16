@@ -10,7 +10,7 @@ export const sendToDiscord = async (message, webhookUrl) => {
     });
 
     if (res.ok) {
-      console.log("✅ AI review sent to Discord!");
+      console.log("✅ AI review sent to Discord!", res);
     } else {
       console.error("❌ Failed to send to Discord:", res.statusText);
     }
