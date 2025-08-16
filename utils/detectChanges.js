@@ -70,6 +70,10 @@ export const getChangesFromLastCommit = async () => {
         name: "last commit changes",
         command: "git diff --name-only HEAD~1..HEAD",
       },
+      {
+        name: "compare current and last one commit changes",
+        command: "git --no-pager diff HEAD^ HEAD --color --unified=9999",
+      },
     ];
 
     for (const method of changeMethods) {
