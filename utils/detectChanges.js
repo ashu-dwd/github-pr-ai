@@ -8,6 +8,7 @@ import { CONFIG } from "../config.js";
  */
 export const getChangesFromLastCommit = async () => {
   const getChanges = (command) => {
+    console.log(`ℹ️ Using command in changes: ${command}`);
     if (command === "compare current and last one commit changes") {
       const fullDiff = execSync(
         "git --no-pager diff HEAD^ HEAD --color --unified=9999",
