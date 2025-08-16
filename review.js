@@ -66,7 +66,7 @@ const processCommitReview = async () => {
       console.log("✅ Email sent");
       console.log("Sending on Discord..");
       await sendToDiscord(review);
-      //console.log("✅ AI review sent to Discord!");
+      console.log("✅ AI review sent to Discord!");
     } catch (error) {
       console.error("❌ Failed to send email:", error);
       return;
