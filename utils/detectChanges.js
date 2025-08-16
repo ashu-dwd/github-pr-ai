@@ -4,122 +4,96 @@ import { execSync } from "child_process";
 import { CONFIG } from "../config.js";
 
 /**
- * Get file changes and full diff from last commit
+ * Enhanced change detection with debugging
  */
 export const getChangesFromLastCommit = async () => {
-  const runGitCommand = (command) => {
+  const getChanges = (command) => {
     try {
-      const output = execSync(command, { encoding: CONFIG.ENCODING });
-      return output.split(/\r?\n/).filter((file) => file.trim() !== "");
+      return execSync(command, { encoding: CONFIG.ENCODING })
+        .split("\n")
+        .filter((file) => isValidFilePath(file));
     } catch (error) {
       console.debug(`ℹ️ Command failed (${command}):`, error.message);
       return [];
     }
   };
 
-  const runGitDiff = (command) => {
-    try {
-      return execSync(command, { encoding: CONFIG.ENCODING });
-    } catch (error) {
-      console.debug(`ℹ️ Diff command failed (${command}):`, error.message);
-      return "";
-    }
-  };
-
   try {
     console.log("🔍 Checking for changes...");
 
-    // Verify git repo
+    // Verify we're in a git repo
     try {
       execSync("git rev-parse --is-inside-work-tree", { stdio: "ignore" });
-    } catch {
-      console.error("❌ Not a Git repository");
-      return { files: [], diff: "" };
+    } catch (error) {
+      console.error("❌ Not in a Git repository:", error.message);
+      return [];
     }
 
-    // Get current branch
-    let currentBranch = "unknown";
+    // Get current branch name
+    let currentBranch;
     try {
       currentBranch = execSync("git branch --show-current", {
         encoding: CONFIG.ENCODING,
       }).trim();
       console.log(`ℹ️ Current branch: ${currentBranch}`);
-    } catch {
-      console.warn("⚠ Could not determine current branch");
+    } catch (error) {
+      console.error("❌ Could not determine current branch:", error.message);
+      return [];
     }
 
-    // Fetch latest changes (optional)
+    // Fetch updates from origin
+    console.log("🔄 Fetching latest changes from origin...");
     try {
-      execSync("git fetch origin", { stdio: "ignore" });
-    } catch {
-      console.warn("⚠ Could not fetch from origin");
+      execSync(`git fetch origin`, { stdio: "ignore" });
+    } catch (error) {
+      console.error("❌ Could not fetch origin:", error.message);
     }
 
     const baseBranch = getDefaultBranch();
     console.log(`ℹ️ Comparing against base branch: ${baseBranch}`);
 
-    // Methods to detect changes
+    // Try different methods to find changes
     const changeMethods = [
       {
-        name: "compare current and last commit",
-        command: "git --no-pager diff HEAD^ HEAD --color=never --unified=9999",
-        isDiff: true,
+        name: "compare current and last one commit changes",
+        command: "git --no-pager diff HEAD^ HEAD --color --unified=9999",
       },
       {
         name: "remote branch comparison",
         command: `git diff --name-only origin/${baseBranch}...HEAD`,
-        isDiff: false,
       },
       {
         name: "local branch comparison",
         command: `git diff --name-only ${baseBranch}...HEAD`,
-        isDiff: false,
       },
       {
         name: "uncommitted changes",
         command: "git diff --name-only",
-        isDiff: false,
       },
       {
         name: "last commit changes",
         command: "git diff --name-only HEAD~1..HEAD",
-        isDiff: false,
       },
     ];
 
     for (const method of changeMethods) {
-      if (method.isDiff) {
-        const diffContent = runGitDiff(method.command);
-        if (diffContent.trim()) {
-          const files = diffContent
-            .split(/\r?\n/)
-            .filter((line) => isValidFilePath(line));
-          console.log(`✅ Found changes (${method.name}):`);
-          files.forEach((f) => console.log(`  - ${f}`));
-          return { files, diff: diffContent };
-        }
-      } else {
-        const files = runGitCommand(method.command).filter(isValidFilePath);
-        if (files.length > 0) {
-          console.log(`✅ Found changed files (${method.name}):`);
-          files.forEach((f) => console.log(`  - ${f}`));
-          // Also fetch full diff for these files
-          const diffContent = files
-            .map((file) =>
-              runGitDiff(
-                `git --no-pager diff HEAD^ HEAD --color=never -- ${file}`
-              )
-            )
-            .join("\n");
-          return { files, diff: diffContent };
-        }
+      const changes = getChanges(method.command);
+      console.log(`ℹ️ Using ${method.name}`);
+      console.log(`ℹ️ Found ${changes} changed files`);
+
+      if (changes.length > 0) {
+        console.log(
+          `✅ Found ${changes.length} changed files (${method.name}):`
+        );
+        changes.forEach((file) => console.log(`  - ${file}`));
+        return changes;
       }
     }
 
-    console.warn("⚠ No changes detected");
-    return { files: [], diff: "" };
+    console.warn("⚠ No file changes detected");
+    return [];
   } catch (error) {
     console.error(`❌ Failed to get git changes: ${error.message}`);
-    return { files: [], diff: "" };
+    return [];
   }
 };
