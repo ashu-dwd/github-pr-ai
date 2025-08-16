@@ -1,4 +1,5 @@
 import fetch from "node-fetch"; // npm i node-fetch
+import { DISCORD_WEBHOOK } from "../config.js";
 
 export const sendToDiscord = async (message, webhookUrl) => {
   try {
@@ -17,3 +18,5 @@ export const sendToDiscord = async (message, webhookUrl) => {
     console.error("❌ Discord send error:", error.message);
   }
 };
+
+//await sendToDiscord("This is test msg again", DISCORD_WEBHOOK);
