@@ -55,6 +55,10 @@ export const getChangesFromLastCommit = async () => {
     // Try different methods to find changes
     const changeMethods = [
       {
+        name: "compare current and last one commit changes",
+        command: "git --no-pager diff HEAD^ HEAD --color --unified=9999",
+      },
+      {
         name: "remote branch comparison",
         command: `git diff --name-only origin/${baseBranch}...HEAD`,
       },
