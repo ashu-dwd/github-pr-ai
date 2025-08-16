@@ -28,6 +28,8 @@ export const GMAIL_RECIEVERS = process.env.GMAIL_RECIEVERS || "";
 export const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
 export const GEMINI_MODEL_NAME = process.env.GEMINI_MODEL_NAME || "";
 
+export const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK;
+
 // Load system prompt from gemini_prompt.txt
 let GEMINI_SYSTEM_PROMPT = "";
 try {
