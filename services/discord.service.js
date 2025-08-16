@@ -4,12 +4,14 @@ import { DISCORD_WEBHOOK } from "../config.js";
 export const sendToDiscord = async (review) => {
   try {
     // Replace existing triple backticks in code to prevent breaking Discord
-    review = review.replace(/```/g, "´´´");
-
-    const chunkSize = 1800; // safe margin for formatting
+    const chunkSize = 1800; // safe for Discord
     for (let i = 0; i < review.length; i += chunkSize) {
       const chunk = review.slice(i, i + chunkSize);
-      const message = `**AI Commit Review:**\n\`\`\`js\n${chunk}\n\`\`\``;
+
+      // Wrap in markdown code block
+      const message = `**AI Commit Review (Part ${
+        Math.floor(i / chunkSize) + 1
+      }):**\n\`\`\`js\n${chunk}\n\`\`\``;
 
       const res = await fetch(DISCORD_WEBHOOK, {
         method: "POST",
