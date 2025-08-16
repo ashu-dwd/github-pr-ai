@@ -2,19 +2,11 @@ import { promises as fs } from "fs";
 import path from "path";
 import { execSync } from "child_process";
 import { generatePRbyGemini } from "./gemini.js";
+import { CONFIG } from "./config.js";
 
 /**
- * Configuration constants
- */
-const CONFIG = {
-  REVIEWS_DIR: "reviews",
-  TEST_OUTPUT_FILE: "test.json",
-  ENCODING: "utf8",
-  GIT_TIMEOUT: 10000,
-};
-
-/**
- * Utility functions
+ * Utility function to ensure a directory exists
+ * @param {string} dirPath - Path to the directory
  */
 const ensureDirectoryExists = async (dirPath) => {
   try {
@@ -24,6 +16,10 @@ const ensureDirectoryExists = async (dirPath) => {
   }
 };
 
+/**
+ * Generates a timestamp for file naming
+ * @returns {string} Formatted timestamp string (YYYY-MM-DD_epochMs)
+ */
 const generateTimestamp = () => {
   const now = new Date();
   const date = now.toISOString().split("T")[0];
@@ -31,143 +27,218 @@ const generateTimestamp = () => {
   return `${date}_${time}`;
 };
 
+/**
+ * Validates a file path
+ * @param {string} filePath - Path to validate
+ * @returns {boolean} True if valid path string
+ */
 const isValidFilePath = (filePath) => {
-  return typeof filePath === "string" && filePath.trim().length > 0;
+  // Skip git metadata files and common non-code files
+  const excludedPatterns = [
+    /\.git(\/|\\|$)/,
+    /(^|\/|\\)\.DS_Store$/,
+    /(^|\/|\\)Thumbs\.db$/,
+  ];
+
+  return (
+    typeof filePath === "string" &&
+    filePath.trim().length > 0 &&
+    !excludedPatterns.some((pattern) => pattern.test(filePath))
+  );
 };
 
 /**
- * Gets the list of changed files between origin/main and current HEAD
- * @returns {Promise<string[]>} Array of changed file paths
+ * Gets the default branch name with enhanced debugging
  */
-const getChangesFromLastCommit = async () => {
+const getDefaultBranch = () => {
   try {
-    const changes = execSync(`git diff --name-only origin/main...HEAD`, {
-      encoding: CONFIG.ENCODING,
-      timeout: CONFIG.GIT_TIMEOUT,
-    })
-      .toString()
-      .split("\n")
-      .filter(Boolean)
-      .filter(isValidFilePath);
-
-    if (changes.length === 0) {
-      console.warn("No file changes detected between origin/main and HEAD");
-    } else {
-      console.log(`Found ${changes.length} changed files:`, changes);
+    // Method 1: Try git symbolic-ref (modern Git)
+    try {
+      const result = execSync(`git symbolic-ref refs/remotes/origin/HEAD`, {
+        encoding: CONFIG.ENCODING,
+        stdio: ["pipe", "pipe", "ignore"],
+      }).trim();
+      return result.replace(/^refs\/remotes\/origin\//, "");
+    } catch {
+      console.debug(
+        "ℹ️ git symbolic-ref failed, trying alternative methods..."
+      );
     }
 
-    return changes;
+    // Method 2: Parse git remote show output
+    try {
+      const remoteInfo = execSync(`git remote show origin`, {
+        encoding: CONFIG.ENCODING,
+      });
+      const match = remoteInfo.match(/HEAD branch: (.+)/);
+      if (match) {
+        console.debug("ℹ️ Found default branch via git remote show");
+        return match[1];
+      }
+    } catch (error) {
+      console.debug("ℹ️ git remote show failed:", error.message);
+    }
+
+    // Method 3: Check common branches
+    const commonBranches = ["main", "master", "trunk", "develop"];
+    for (const branch of commonBranches) {
+      try {
+        execSync(`git rev-parse --verify origin/${branch}`, {
+          stdio: ["ignore", "ignore", "ignore"],
+        });
+        console.debug(`ℹ️ Assuming default branch is ${branch}`);
+        return branch;
+      } catch {}
+    }
+
+    console.debug('ℹ️ Using "main" as default branch fallback');
+    return "main";
   } catch (error) {
-    console.error(`Failed to get git changes: ${error.message}`);
+    console.error(`❌ Error detecting default branch: ${error.message}`);
+    return "main";
+  }
+};
+
+/**
+ * Enhanced change detection with debugging
+ */
+const getChangesFromLastCommit = async () => {
+  const getChanges = (command) => {
+    try {
+      return execSync(command, { encoding: CONFIG.ENCODING })
+        .split("\n")
+        .filter((file) => isValidFilePath(file));
+    } catch (error) {
+      console.debug(`ℹ️ Command failed (${command}):`, error.message);
+      return [];
+    }
+  };
+
+  try {
+    console.log("🔍 Checking for changes...");
+
+    // Verify we're in a git repo
+    try {
+      execSync("git rev-parse --is-inside-work-tree", { stdio: "ignore" });
+    } catch {
+      console.error("❌ Not in a Git repository");
+      return [];
+    }
+
+    // Get current branch name
+    let currentBranch;
+    try {
+      currentBranch = execSync("git branch --show-current", {
+        encoding: CONFIG.ENCODING,
+      }).trim();
+      console.log(`ℹ️ Current branch: ${currentBranch}`);
+    } catch {
+      console.error("❌ Could not determine current branch");
+      return [];
+    }
+
+    // Fetch updates from origin
+    console.log("🔄 Fetching latest changes from origin...");
+    execSync(`git fetch origin`, { stdio: "ignore" });
+
+    const baseBranch = getDefaultBranch();
+    console.log(`ℹ️ Comparing against base branch: ${baseBranch}`);
+
+    // Try different methods to find changes
+    const changeMethods = [
+      {
+        name: "remote branch comparison",
+        command: `git diff --name-only origin/${baseBranch}...HEAD`,
+      },
+      {
+        name: "local branch comparison",
+        command: `git diff --name-only ${baseBranch}...HEAD`,
+      },
+      {
+        name: "uncommitted changes",
+        command: "git diff --name-only",
+      },
+      {
+        name: "last commit changes",
+        command: "git diff --name-only HEAD~1..HEAD",
+      },
+    ];
+
+    for (const method of changeMethods) {
+      const changes = getChanges(method.command);
+      if (changes.length > 0) {
+        console.log(
+          `✅ Found ${changes.length} changed files (${method.name}):`
+        );
+        changes.forEach((file) => console.log(`  - ${file}`));
+        return changes;
+      }
+    }
+
+    console.warn("⚠ No file changes detected");
+    return [];
+  } catch (error) {
+    console.error(`❌ Failed to get git changes: ${error.message}`);
     return [];
   }
 };
 
 /**
  * Reads content from multiple files
- * @param {string[]} fileNameArray - Array of file paths to read
- * @returns {Promise<Record<string, string>>} Object mapping file paths to their content
  */
-const readFileContents = async (fileNameArray) => {
-  if (!Array.isArray(fileNameArray)) {
-    console.error("Expected array of file names");
-    return {};
-  }
-
-  const fileContents = {};
-
-  const readPromises = fileNameArray.map(async (fileName) => {
+const readFileContents = async (filePaths) => {
+  const contents = {};
+  for (const filePath of filePaths) {
     try {
-      const content = await fs.readFile(fileName, CONFIG.ENCODING);
-      fileContents[fileName] = content;
-      console.log(`Successfully read file: ${fileName}`);
+      contents[filePath] = await fs.readFile(filePath, CONFIG.ENCODING);
+      console.log(`📖 Read file: ${filePath}`);
     } catch (error) {
-      console.error(`Error reading file ${fileName}: ${error.message}`);
-      fileContents[
-        fileName
-      ] = `Error: Could not read file content (${error.message})`;
+      console.error(`❌ Error reading ${filePath}: ${error.message}`);
+      contents[filePath] = `Error reading file: ${error.message}`;
     }
-  });
-
-  await Promise.all(readPromises);
-  return fileContents;
-};
-
-/**
- * Writes content to a file with proper error handling
- * @param {string} filePath - Path where to write the file
- * @param {string} content - Content to write
- * @returns {Promise<boolean>} Success status
- */
-const writeFileContent = async (filePath, content) => {
-  try {
-    const directory = path.dirname(filePath);
-    await ensureDirectoryExists(directory);
-    await fs.writeFile(filePath, content, CONFIG.ENCODING);
-    console.log(`Successfully wrote file: ${filePath}`);
-    return true;
-  } catch (error) {
-    console.error(`Error writing file ${filePath}: ${error.message}`);
-    return false;
   }
+  return contents;
 };
 
 /**
- * Generates review file path with timestamp
- * @returns {string} Review file path
- */
-const generateReviewFilePath = () => {
-  const timestamp = generateTimestamp();
-  return path.join(CONFIG.REVIEWS_DIR, `review_${timestamp}.md`);
-};
-
-/**
- * Main function to process commit and generate review
+ * Main review process
  */
 const processCommitReview = async () => {
   try {
-    console.log("Starting commit review process...");
+    console.log("🚀 Starting commit review process...");
+    console.log("ℹ️ Working directory:", process.cwd());
 
-    // Get changed files from last commit
     const changedFiles = await getChangesFromLastCommit();
     if (changedFiles.length === 0) {
-      console.log("No changes to review");
+      console.log("🛑 No changes to review");
+      console.log("\n💡 Try these commands to debug:");
+      console.log("  git status");
+      console.log("  git log --oneline -n 3");
+      console.log("  git diff --name-only HEAD~1..HEAD");
       return;
     }
 
-    // Read file contents
-    console.log("Reading file contents...");
+    console.log("📄 Reading file contents...");
     const fileContents = await readFileContents(changedFiles);
 
-    // Write test output (optional debug file)
-    await writeFileContent(
-      CONFIG.TEST_OUTPUT_FILE,
-      JSON.stringify(fileContents, null, 2)
-    );
-
-    // Generate AI review
-    console.log("Generating AI review...");
-    const aiReview = await generatePRbyGemini(fileContents);
-
-    if (!aiReview) {
-      console.error("Failed to generate AI review");
+    console.log("🧠 Generating review...");
+    const review = await generatePRbyGemini(fileContents);
+    if (!review) {
+      console.error("❌ Failed to generate review");
       return;
     }
 
-    // Write review to file
-    const reviewFilePath = generateReviewFilePath();
-    const success = await writeFileContent(reviewFilePath, aiReview);
-
-    if (success) {
-      console.log(`Review completed and saved to: ${reviewFilePath}`);
-    } else {
-      console.error("Failed to save review file");
-    }
+    const reviewPath = path.join(
+      CONFIG.REVIEWS_DIR,
+      `review_${generateTimestamp()}.md`
+    );
+    await ensureDirectoryExists(CONFIG.REVIEWS_DIR);
+    await fs.writeFile(reviewPath, review, CONFIG.ENCODING);
+    console.log(`✅ Review saved to: ${reviewPath}`);
   } catch (error) {
-    console.error("Error in commit review process:", error.message);
+    console.error("💥 Process failed:", error.message);
     process.exit(1);
   }
 };
 
-// Execute the main function
 processCommitReview();
