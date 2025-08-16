@@ -30,6 +30,6 @@ const callGeminiAPI = async (filesObject) => {
 export const generatePRbyGemini = async (filesObject) => {
   console.log("Calling Gemini API with files:", Object.keys(filesObject));
   const rawResponse = await callGeminiAPI(filesObject);
-  console.log("Gemini API response:", rawResponse);
+  //console.log("Gemini API response:", rawResponse);
   return rawResponse;
 };
