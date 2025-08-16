@@ -47,11 +47,11 @@ const processCommitReview = async () => {
 
     const reviewPath = path.join(
       CONFIG.REVIEWS_DIR,
-      `${review.prTitle.split(" ").join("_")}.md`
+      `review_${generateTimestamp()}.md`
     );
     await ensureDirectoryExists(CONFIG.REVIEWS_DIR);
     try {
-      await fs.writeFile(reviewPath, review.prDetails, CONFIG.ENCODING);
+      await fs.writeFile(reviewPath, review, CONFIG.ENCODING);
       console.log(`✅ Review saved to: ${reviewPath}`);
     } catch (error) {
       console.error(
@@ -62,10 +62,10 @@ const processCommitReview = async () => {
     }
     console.log("📧 Sending email...");
     try {
-      await sendEmail(review.prDetails);
+      await sendEmail(review);
       console.log("✅ Email sent");
-      //console.log("Sending on Discord..");
-      //await sendToDiscord(review);
+      console.log("Sending on Discord..");
+      await sendToDiscord(review);
       //console.log("✅ AI review sent to Discord!");
     } catch (error) {
       console.error("❌ Failed to send email:", error);
