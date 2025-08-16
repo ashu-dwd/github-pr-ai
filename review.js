@@ -62,7 +62,7 @@ const processCommitReview = async () => {
     }
     console.log("📧 Sending email...");
     try {
-      await sendEmail(review);
+      await sendEmail(review.prDetails);
       console.log("✅ Email sent");
       //console.log("Sending on Discord..");
       //await sendToDiscord(review);
