@@ -74,18 +74,13 @@ export const getChangesFromLastCommit = async () => {
         name: "last commit changes",
         command: "git diff --name-only HEAD~1..HEAD",
       },
-      {
-        name: "compare current and last one commit changes",
-        command: "git --no-pager diff HEAD^ HEAD --color --unified=9999",
-      },
     ];
 
     for (const method of changeMethods) {
       const changes = getChanges(method.command);
+
       if (changes.length > 0) {
-        console.log(
-          `✅ Found ${changes.length} changed files (${method.name}):`
-        );
+        console.log(`✅ Found ${changes} changed files (${method.name}):`);
         changes.forEach((file) => console.log(`  - ${file}`));
         return changes;
       }
