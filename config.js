@@ -1,6 +1,13 @@
 import dotenv from "dotenv";
 dotenv.config({ path: ".env.local" });
 
+export const CONFIG = {
+  REVIEWS_DIR: "reviews",
+  TEST_OUTPUT_FILE: "test.json",
+  ENCODING: "utf8",
+  GIT_TIMEOUT: 10000,
+};
+
 export const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 export const GEMINI_MODEL_NAME = process.env.GEMINI_MODEL_NAME;
 
