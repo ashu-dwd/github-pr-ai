@@ -14,7 +14,7 @@ export const getChangesFromLastCommit = async () => {
         { encoding: CONFIG.ENCODING }
       );
       const lines = fullDiff.split("\n");
-      console.log(lines);
+      console.log("fullDiff", fullDiff);
 
       return;
     }
