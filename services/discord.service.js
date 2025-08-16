@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import { DISCORD_WEBHOOK } from "../config";
+import { DISCORD_WEBHOOK } from "../config.js";
 
 export const sendToDiscord = async (review) => {
   try {
