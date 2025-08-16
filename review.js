@@ -1,12 +1,13 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { execSync } from "child_process";
-import { generatePRbyGemini } from "./gemini.js";
+import { generatePRbyGemini } from "./services/gemini.service.js";
 import { CONFIG } from "./config.js";
 import { ensureDirectoryExists } from "./utils/checkDir.js";
 import { generateTimestamp } from "./utils/generateTimestamp.js";
 import { getChangesFromLastCommit } from "./utils/detectChanges.js";
 import { readFileContents } from "./utils/readFileContents.js";
+import { sendEmail } from "./services/mail.service.js";
 
 /**
  * Main review process
@@ -43,6 +44,9 @@ const processCommitReview = async () => {
     await ensureDirectoryExists(CONFIG.REVIEWS_DIR);
     await fs.writeFile(reviewPath, review, CONFIG.ENCODING);
     console.log(`✅ Review saved to: ${reviewPath}`);
+    console.log("📧 Sending email...");
+    await sendEmail(reviewPath);
+    console.log("✅ Email sent");
   } catch (error) {
     console.error("💥 Process failed:", error.message);
     process.exit(1);

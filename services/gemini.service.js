@@ -3,7 +3,7 @@ import {
   GEMINI_API_KEY,
   GEMINI_MODEL_NAME,
   GEMINI_SYSTEM_PROMPT,
-} from "./config.js";
+} from "../config.js";
 
 const openai = new OpenAI({
   apiKey: GEMINI_API_KEY,

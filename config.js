@@ -8,6 +8,11 @@ export const CONFIG = {
   GIT_TIMEOUT: 10000,
 };
 
+export const GMAIL_USER_NAME = process.env.GMAIL_USER_NAME;
+export const GMAIL_USER_PASSWORD = process.env.GMAIL_USER_PASSWORD;
+export const GMAIL_USER_EMAIL = process.env.GMAIL_USER_EMAIL;
+export const GMAIL_RECIEVERS = process.env.GMAIL_RECIEVERS;
+
 export const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 export const GEMINI_MODEL_NAME = process.env.GEMINI_MODEL_NAME;
 
