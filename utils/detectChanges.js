@@ -1,0 +1,88 @@
+import { isValidFilePath } from "./checkValidPath.js";
+import { getDefaultBranch } from "./getCurrentBranch.js";
+import { execSync } from "child_process";
+import { CONFIG } from "../config.js";
+
+/**
+ * Enhanced change detection with debugging
+ */
+export const getChangesFromLastCommit = async () => {
+  const getChanges = (command) => {
+    try {
+      return execSync(command, { encoding: CONFIG.ENCODING })
+        .split("\n")
+        .filter((file) => isValidFilePath(file));
+    } catch (error) {
+      console.debug(`ℹ️ Command failed (${command}):`, error.message);
+      return [];
+    }
+  };
+
+  try {
+    console.log("🔍 Checking for changes...");
+
+    // Verify we're in a git repo
+    try {
+      execSync("git rev-parse --is-inside-work-tree", { stdio: "ignore" });
+    } catch {
+      console.error("❌ Not in a Git repository");
+      return [];
+    }
+
+    // Get current branch name
+    let currentBranch;
+    try {
+      currentBranch = execSync("git branch --show-current", {
+        encoding: CONFIG.ENCODING,
+      }).trim();
+      console.log(`ℹ️ Current branch: ${currentBranch}`);
+    } catch {
+      console.error("❌ Could not determine current branch");
+      return [];
+    }
+
+    // Fetch updates from origin
+    console.log("🔄 Fetching latest changes from origin...");
+    execSync(`git fetch origin`, { stdio: "ignore" });
+
+    const baseBranch = getDefaultBranch();
+    console.log(`ℹ️ Comparing against base branch: ${baseBranch}`);
+
+    // Try different methods to find changes
+    const changeMethods = [
+      {
+        name: "remote branch comparison",
+        command: `git diff --name-only origin/${baseBranch}...HEAD`,
+      },
+      {
+        name: "local branch comparison",
+        command: `git diff --name-only ${baseBranch}...HEAD`,
+      },
+      {
+        name: "uncommitted changes",
+        command: "git diff --name-only",
+      },
+      {
+        name: "last commit changes",
+        command: "git diff --name-only HEAD~1..HEAD",
+      },
+    ];
+
+    for (const method of changeMethods) {
+      const changes = getChanges(method.command);
+      if (changes.length > 0) {
+        console.log(
+          `✅ Found ${changes.length} changed files (${method.name}):`
+        );
+        changes.forEach((file) => console.log(`  - ${file}`));
+        return changes;
+      }
+    }
+
+    console.warn("⚠ No file changes detected");
+    return [];
+  } catch (error) {
+    console.error(`❌ Failed to get git changes: ${error.message}`);
+    return [];
+  }
+};
