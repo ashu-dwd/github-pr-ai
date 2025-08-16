@@ -24,8 +24,8 @@ export const getChangesFromLastCommit = async () => {
     // Verify we're in a git repo
     try {
       execSync("git rev-parse --is-inside-work-tree", { stdio: "ignore" });
-    } catch {
-      console.error("❌ Not in a Git repository");
+    } catch (error) {
+      console.error("❌ Not in a Git repository:", error.message);
       return [];
     }
 
@@ -36,14 +36,18 @@ export const getChangesFromLastCommit = async () => {
         encoding: CONFIG.ENCODING,
       }).trim();
       console.log(`ℹ️ Current branch: ${currentBranch}`);
-    } catch {
-      console.error("❌ Could not determine current branch");
+    } catch (error) {
+      console.error("❌ Could not determine current branch:", error.message);
       return [];
     }
 
     // Fetch updates from origin
     console.log("🔄 Fetching latest changes from origin...");
-    execSync(`git fetch origin`, { stdio: "ignore" });
+    try {
+      execSync(`git fetch origin`, { stdio: "ignore" });
+    } catch (error) {
+      console.error("❌ Could not fetch origin:", error.message);
+    }
 
     const baseBranch = getDefaultBranch();
     console.log(`ℹ️ Comparing against base branch: ${baseBranch}`);

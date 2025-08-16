@@ -31,9 +31,17 @@ const processCommitReview = async () => {
     const fileContents = await readFileContents(changedFiles);
 
     console.log("🧠 Generating review...");
-    const review = await generatePRbyGemini(fileContents);
-    if (!review) {
-      console.error("❌ Failed to generate review");
+    let review;
+    try {
+      review = await generatePRbyGemini(fileContents);
+      if (!review) {
+        console.error(
+          "❌ Failed to generate review: Gemini API returned empty response"
+        );
+        return;
+      }
+    } catch (error) {
+      console.error("❌ Failed to generate review:", error.message);
       return;
     }
 
@@ -42,11 +50,24 @@ const processCommitReview = async () => {
       `review_${generateTimestamp()}.md`
     );
     await ensureDirectoryExists(CONFIG.REVIEWS_DIR);
-    await fs.writeFile(reviewPath, review, CONFIG.ENCODING);
-    console.log(`✅ Review saved to: ${reviewPath}`);
+    try {
+      await fs.writeFile(reviewPath, review, CONFIG.ENCODING);
+      console.log(`✅ Review saved to: ${reviewPath}`);
+    } catch (error) {
+      console.error(
+        `❌ Failed to save review to ${reviewPath}:`,
+        error.message
+      );
+      return;
+    }
     console.log("📧 Sending email...");
-    await sendEmail(review);
-    console.log("✅ Email sent");
+    try {
+      await sendEmail(review);
+      console.log("✅ Email sent");
+    } catch (error) {
+      console.error("❌ Failed to send email:", error.message);
+      return;
+    }
   } catch (error) {
     console.error("💥 Process failed:", error.message);
     process.exit(1);

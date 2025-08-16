@@ -10,7 +10,7 @@ const openai = new OpenAI({
   baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
 });
 
-export const generatePRbyGemini = async (filesObject) => {
+const callGeminiAPI = async (filesObject) => {
   const response = await openai.chat.completions.create({
     model: GEMINI_MODEL_NAME,
     messages: [
@@ -24,8 +24,12 @@ export const generatePRbyGemini = async (filesObject) => {
       },
     ],
   });
-  const rawResponse = response.choices[0].message.content;
-  return rawResponse;
+  return response.choices[0].message.content;
+};
 
-  //console.log(response.choices[0].message.content);
+export const generatePRbyGemini = async (filesObject) => {
+  console.log("Calling Gemini API with files:", Object.keys(filesObject));
+  const rawResponse = await callGeminiAPI(filesObject);
+  console.log("Gemini API response:", rawResponse);
+  return rawResponse;
 };

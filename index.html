@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>README.md</title>
+  </head>
+  <body>
+    <pre id="readme"></pre>
+    <script>
+      fetch("README.md")
+        .then((response) => response.text())
+        .then((text) => (document.getElementById("readme").textContent = text));
+    </script>
+  </body>
+</html>
