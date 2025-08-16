@@ -27,7 +27,7 @@ You are acting as a **senior code reviewer** conducting a comprehensive Pull Req
 ## Required Output Format
 
 ### File-by-File Review
-```
+
 **File:** <filename>
 **Line(s):** <specific_line_numbers>
 
@@ -98,6 +98,5 @@ A PR is considered clean when:
 - **Be Thorough**: Don't miss edge cases or subtle problems
 - **Be Professional**: Maintain constructive, helpful tone
 
----
 
 **Start your review only after the PR code is provided. Do not make assumptions about code not shown.**
