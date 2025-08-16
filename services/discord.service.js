@@ -1,22 +1,30 @@
-import fetch from "node-fetch"; // npm i node-fetch
-import { DISCORD_WEBHOOK } from "../config.js";
+import fetch from "node-fetch";
+import { DISCORD_WEBHOOK } from "../config";
 
-export const sendToDiscord = async (message) => {
+export const sendToDiscord = async (review) => {
   try {
-    const res = await fetch(DISCORD_WEBHOOK, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: message }),
-    });
+    // Replace existing triple backticks in code to prevent breaking Discord
+    review = review.replace(/```/g, "´´´");
 
-    if (res.ok) {
-      console.log("✅ AI review sent to Discord!", res);
-    } else {
-      console.error("❌ Failed to send to Discord:", res.statusText);
+    const chunkSize = 1800; // safe margin for formatting
+    for (let i = 0; i < review.length; i += chunkSize) {
+      const chunk = review.slice(i, i + chunkSize);
+      const message = `**AI Commit Review:**\n\`\`\`js\n${chunk}\n\`\`\``;
+
+      const res = await fetch(DISCORD_WEBHOOK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: message }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("❌ Failed to send chunk:", text);
+      }
     }
-  } catch (error) {
-    console.error("❌ Discord send error:", error.message);
+
+    console.log("✅ Full AI review sent to Discord in chunks!");
+  } catch (err) {
+    console.error("❌ Discord send error:", err.message);
   }
 };
-
-//await sendToDiscord("This is test msg again", DISCORD_WEBHOOK);
