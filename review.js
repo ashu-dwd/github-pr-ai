@@ -45,7 +45,7 @@ const processCommitReview = async () => {
     await fs.writeFile(reviewPath, review, CONFIG.ENCODING);
     console.log(`✅ Review saved to: ${reviewPath}`);
     console.log("📧 Sending email...");
-    await sendEmail(reviewPath);
+    await sendEmail(review);
     console.log("✅ Email sent");
   } catch (error) {
     console.error("💥 Process failed:", error.message);
