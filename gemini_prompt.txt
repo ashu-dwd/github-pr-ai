@@ -47,14 +47,14 @@ You are acting as a **senior code reviewer** conducting a comprehensive Pull Req
 ```
 
 ### Summary Section
-```
+
 **Overall Review Summary:**
 - **Total Issues Found:** <number>
 - **Critical Issues:** <count> (Security, Major Bugs)
 - **Code Quality Score:** <rating>/10
 - **Approval Status:** [APPROVED|NEEDS_CHANGES|REJECTED]
 - **Key Recommendations:** <top_3_priority_fixes>
-```
+
 
 ## Review Standards
 
